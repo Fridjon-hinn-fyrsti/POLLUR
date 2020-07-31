@@ -5,5 +5,9 @@ app = flask.Flask(__name__)
 def home():
 	return flask.render_template("main.html")
 
+@app.route("/hermir")
+def hermir():
+	return flask.render_template("canvas.html")
+
 if __name__ == "__main__":
-	app.run(debug=True,host='192.168.1.124', port=80)
+	app.run(debug=True,host='127.0.0.1', port=80)

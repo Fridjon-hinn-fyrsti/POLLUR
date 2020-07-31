@@ -1,0 +1,128 @@
+<!DOCTYPE html>
+<html>
+<body>
+<canvas id="mycanvas" width="1500", height="800"></canvas>
+</body>
+<script>
+let c = document.getElementById("mycanvas");
+let text_box = document.getElementById("func");
+
+let width = c.width;
+let height = c.height;
+let ctx = c.getContext("2d");
+var G = 0.01;
+
+function Ball(x, y, r){
+	this.x = x;
+	this.y = y;
+	this.dx = 0;	
+	this.dy = 0;
+	this.r = r;
+	this.m = r*r*0.1;
+	this.updateLocation = function(step_size){
+		this.y += this.dy*step_size;
+		this.x += this.dx*step_size;
+		};
+	this.apply_force = function(force, step_size){
+		this.dx += step_size*force.x/this.m;
+		this.dy += step_size*force.y/this.m;
+		};
+	this.drawBall = function(){
+		ctx.beginPath();
+		ctx.arc(this.x, this.y, this.r, 0, Math.PI * 2, true);
+		ctx.fill();
+		};
+	}
+
+
+function Force(x, y){
+	this.x = x;
+	this.y = y;
+	this.scale = function(c){
+		this.x *= c
+		this.y *= c
+	}
+	this.new_scaled = function(c){
+		return new Force(this.x*c, this.y*c);
+	}
+}
+
+
+function Balls(number, step_size){
+	this.balls = new Array(number);
+	this.step_size = step_size;
+	for (let i = 0; i<number; i++){
+		this.balls[i] = new Ball(i*30+500,
+		i*i*30+200,
+		10 + i*2); 
+	}
+	this.update = function(){
+		let force;
+		for (let i=0; i<this.balls.length; i++){
+			//Apply gravity
+			//force = {x:0, y:G}
+			//this.balls[i].apply_force(force, this.step_size)
+			//Apply colitions with balls and gravitational attraction
+			for (let j=i+1; j< this.balls.length; j++){
+				let dx = this.balls[j].x - this.balls[i].x;
+				let dy = this.balls[j].y - this.balls[i].y;
+				let dr = this.balls[i].r + this.balls[j].r;
+
+				let i_j_1_force = new Force(dx/dr, dy/dr);
+
+				if (Math.sqrt(dx**2 + dy**2) <  dr){
+					this.balls[i].apply_force(i_j_1_force.new_scaled(-10), 10*this.step_size);
+					this.balls[j].apply_force(i_j_1_force.new_scaled(10), 10*this.step_size);
+				}
+				let m_i = this.balls[i].m;
+				let m_j = this.balls[j].m;
+				let gravitational_force = G*m_i*m_j/(dr**2);
+				this.balls[i].apply_force(i_j_1_force.new_scaled(gravitational_force), this.step_size);
+				this.balls[j].apply_force(i_j_1_force.new_scaled(-gravitational_force), this.step_size);
+
+			}
+			//Apply colitions with walls
+//			wall_const = 3
+//			if (0 > this.balls[i].x - this.balls[i].r){
+//				force = {x:wall_const*this.balls[i].m, y:0};
+//				this.balls[i].apply_force(force, this.step_size);
+//			}
+//			if (this.balls[i].x > width - this.balls[i].r){
+//				force = {x:-wall_const*this.balls[i].m, y:0};
+//				this.balls[i].apply_force(force, this.step_size);
+//			}
+//			if (this.balls[i].y > height - this.balls[i].r){
+//				force = {x:0, y:-wall_const*this.balls[i].m};
+//				this.balls[i].apply_force(force, this.step_size);
+			//}
+			//if (0 > this.balls[i].y - this.balls[i].r){
+			//	force = {x:0, y:wall_const*this.balls[i].m};
+			//	this.balls[i].apply_force(force, this.step_size);
+			//}
+			//Apply drag
+			//let drag = 0.003;
+			//force = {x: -this.balls[i].dx*drag*this.balls[i].r,y: -this.balls[i].dy*drag*this.balls[i].r};
+			//this.balls[i].apply_force(force, this.step_size);
+		}
+		for (let i = 0; i<this.balls.length; i++){
+			this.balls[i].updateLocation(this.step_size);
+		}		
+	}
+	this.drawBalls = function(){
+		for (let i = 0; i<this.balls.length; i++){
+			this.balls[i].drawBall(); 
+		}
+	}
+};
+var number_of_balls = 5;
+var iterations = 2*2*2*2*2*2*2;
+balls = new Balls(number_of_balls, 1/iterations);
+function draw() {
+	ctx.clearRect(0,0,width,height);
+	for (let i = 0; i < iterations; i++)balls.update();
+	balls.drawBalls();
+	window.requestAnimationFrame(draw);
+}
+draw();
+</script>
+</html>
